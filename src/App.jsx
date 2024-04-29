@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Toaster, toast } from 'sonner';
+import { DisplayGuess, DisplayWins } from './components/display';
 import './App.css'
+import NotePlayer from './noteplayer';
+import { play } from './sound';
 
-const panel_length = 3;
-const panel_height = 4;
-const arrNum = panel_height * panel_length;
-const panel = Array(arrNum).fill(null)
 const myPanel = [
   [0,0,0,],
   [0,0,0,],
@@ -14,8 +14,6 @@ const myPanel = [
 const outPosition = 2
 const maxGuess = 30
 const guessNumber = () => (Math.floor(Math.random() * maxGuess))
-
-// const initialPanel = Array.from({ length: 4 }, () => Array(3).fill(null));
 
 function binaryStringToNumber(binaryString) {
   return parseInt(binaryString, 2);
@@ -28,12 +26,16 @@ function numberToBinaryString(number) {
 function App() {
   return (
     <>
-      <Panel />
+      <Toaster />
+      <Panel className='Panel'/>
+      <NotePlayer />
+      <Footer />
     </>
   )
 }
 
 function Panel() {
+  const wins = useRef(null);
   const [panel, setPanel] = useState(myPanel);
   const [sum, setSum] = useState({decimal: 0, binary: 0});
   const [guess, setGuess] = useState(guessNumber);
@@ -56,8 +58,14 @@ function Panel() {
     const sum = {decimal: decimalSum, binary: binarySum}
 
     if (sum.decimal === nextGuess) {
-      alert("you won")
-      setGuess(guessNumber)
+      wins.current = wins.current + 1;
+      if (wins.current === 10) {
+        play('c~~BAG~E~~/EGc~B~~AGF/EDE~/////AGFE/D/E/F/A/G~~FED/C~~////DDAA~~~////c~B~G~~~/////CCFF~~~///A~G~F~~E~~') // fly me to the moon
+        toast("congratulations you won 🎉");
+      } else {
+        play('c~G')
+      }
+      setGuess(guessNumber);
     }
 
     setSum(sum);
@@ -75,41 +83,48 @@ function Panel() {
         nextGate[columnIndex] = 1;
       }
     }
-    // // set OutPosition
-    // if (nextGate[0] + nextGate[1] !== outPosition) {
-    //   nextGate[outPosition] = 1;
-    // } else {
-    //   nextGate[outPosition] = 0;
-    // }
 
     nextPanel[rowIndex] = nextGate;
     setPanel(nextPanel);
   }
+
   return (
+    // <h2>{guess ? guess : 'guess the number'}</h2>
     <section className='my-panel'>
-      <h1>{sum.decimal ? sum.decimal : 'make a sum'}</h1>
-      <h2>{guess ? guess : 'guess the number'}</h2>
+      <h2>{sum.decimal ? sum.decimal : 'flip the bits to get:'}</h2>
+      <DisplayGuess guess={guess}/>
       {myPanel.map((_, rowIndex) => (
       <section key={rowIndex} className='row'>
           <Row key={rowIndex} gate={panel[rowIndex]} rowIndex={rowIndex} onClick={handleInClick}/>
       </section>
       ))}
-      <p>{sum.binary ? sum.binary : ':('}</p>
+      <DisplayWins wins={wins}/>
     </section>
   )
 }
 
-function Row({gate, rowIndex, onClick}) {
-  // const [gate, setGate] = useState(Array(3).fill(null));
-  function handleInClick(columnIndex) {
+function Row({ gate, rowIndex, onClick }) {
+  const sounds = [['e', 'E#'], ['c', 'C#']];
+
+  function handleInClick(columnIndex, note) {
     onClick(rowIndex, columnIndex);
+    play(note);
   }
+
   return (
     <>
-      <In value={gate[0]} type={TYPE.blue} handleClick={() => (handleInClick(0))} />
-      <In value={gate[1]} type={TYPE.green} handleClick={() => (handleInClick(1))} />
+      <In
+        value={gate[0]}
+        type={TYPE.blue}
+        handleClick={() => handleInClick(0, sounds[0][gate[0]])}
+      />
+      <In
+        value={gate[1]}
+        type={TYPE.green}
+        handleClick={() => handleInClick(1, sounds[1][gate[1]])}
+      />
     </>
-  )
+  );
 }
 
 const TYPE = {
@@ -121,8 +136,17 @@ function In({value, type, handleClick}) {
   const style = {color: TYPE[type]}
   return <button onClick={handleClick} style={style}>{value ? value : "0"}</button>
 }
-function Out({value}) {
-  return <button>{value ? value : "0"}</button>
+
+function Footer() {
+  return (
+    <footer>
+      <p>Binary addition game, source code:</p>
+      <ul>
+        <li><a href="https://github.com/M11K3AS/binary-game">GitHub</a></li>
+        <li><a href="https://www.linkedin.com/in/bernartdmiqueas">LinkedIn</a></li>
+      </ul>
+    </footer>
+  )
 }
 
 export default App

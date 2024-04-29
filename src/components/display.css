@@ -1,0 +1,25 @@
+.shake {
+  animation: shake 0.2s linear 3;
+}
+.box {
+  /* Your existing styles */
+  display: inline-block; /* Add this line to display elements horizontally */
+  margin-right: 10px; /* Add margin between elements if needed */
+}
+@keyframes shake {
+  0% {
+    transform: translateY(0);
+  }
+  10% {
+    transform: translateY(-3px);
+  }
+  30% {
+    transform: translateY(3px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
